@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CCH.HPSO.Azure.EmailTextGenerationApp": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7257",
+      "launchBrowser": false
+    }
+  }
+}

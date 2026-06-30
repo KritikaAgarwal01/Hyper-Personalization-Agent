@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CCH.HPSO.Azure.EvaluateAndPublishApp": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7282",
+      "launchBrowser": false
+    }
+  }
+}
