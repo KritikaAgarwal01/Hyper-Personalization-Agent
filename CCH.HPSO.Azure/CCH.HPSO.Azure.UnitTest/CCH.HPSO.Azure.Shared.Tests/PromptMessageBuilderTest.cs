@@ -54,8 +54,8 @@ namespace CCH.HPSO.Azure.Shared.Tests
                 new PlaceHolderInformation { Placeholder = "name" }
             };
             var entity = new Entity();
-            entity.Attributes["cch_placeholdername"] = "name";
-            entity.Attributes["cch_traversalpath"] = "contact.contactrole.account.name";
+            entity.Attributes["ms_placeholdername"] = "name";
+            entity.Attributes["ms_traversalpath"] = "contact.contactrole.account.name";
             var mapping = new EntityCollection(new List<Entity> { entity });
 
             var builder = new PromptMessageBuilder();
@@ -74,8 +74,8 @@ namespace CCH.HPSO.Azure.Shared.Tests
                 new PlaceHolderInformation { Placeholder = "name" }
             };
             var entity = new Entity();
-            entity.Attributes["cch_placeholdername"] = "name";
-            entity.Attributes["cch_traversalpath"] = "contact.customerprofile.name";
+            entity.Attributes["ms_placeholdername"] = "name";
+            entity.Attributes["ms_traversalpath"] = "contact.customerprofile.name";
             var mapping = new EntityCollection(new List<Entity> { entity });
 
             var builder = new PromptMessageBuilder();

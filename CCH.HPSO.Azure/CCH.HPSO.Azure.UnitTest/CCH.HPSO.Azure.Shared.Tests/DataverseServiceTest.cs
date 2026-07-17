@@ -1,5 +1,4 @@
-﻿using CCH.HPSO.Azure.EvaluateAndPublishApp;
-using CCH.HPSO.Azure.Shared.Contracts;
+﻿using CCH.HPSO.Azure.Shared.Contracts;
 using CCH.HPSO.Azure.Shared.DataModel;
 using CCH.HPSO.Azure.Shared.Enum;
 using CCH.HPSO.Azure.Shared.Services;
@@ -39,8 +38,8 @@ namespace CCH.HPSO.Azure.Shared.Tests
             var accountId = Guid.NewGuid();
             var accountAttributes = new List<string> { "name" };
 
-            var contactRoleEntity = new Entity("cch_contactrole");
-            contactRoleEntity["cch_accountid"] = new EntityReference("account", accountId);
+            var contactRoleEntity = new Entity("ms_contactrole");
+            contactRoleEntity["ms_accountid"] = new EntityReference("account", accountId);
 
             var contactRoles = new EntityCollection(new List<Entity> { contactRoleEntity });
 
@@ -48,7 +47,7 @@ namespace CCH.HPSO.Azure.Shared.Tests
             accountEntity["name"] = "Test Account";
             var accountCollection = new EntityCollection(new List<Entity> { accountEntity });
 
-            _orgServiceMock.Setup(x => x.RetrieveMultiple(It.Is<QueryExpression>(q => q.EntityName == "cch_contactrole")))
+            _orgServiceMock.Setup(x => x.RetrieveMultiple(It.Is<QueryExpression>(q => q.EntityName == "ms_contactrole")))
                 .Returns(contactRoles);
 
             _orgServiceMock.Setup(x => x.RetrieveMultiple(It.Is<QueryExpression>(q => q.EntityName == "account")))
@@ -266,8 +265,8 @@ namespace CCH.HPSO.Azure.Shared.Tests
             var promptTemplateName = "Test Template";
             var orgService = _orgServiceMock.Object;
 
-            var mappingEntity = new Entity("cch_prompttemplateattributemapping");
-            mappingEntity["cch_placeholdername"] = "Placeholder";
+            var mappingEntity = new Entity("ms_prompttemplateattributemapping");
+            mappingEntity["ms_placeholdername"] = "Placeholder";
             var mappings = new EntityCollection(new List<Entity> { mappingEntity });
 
             _orgServiceMock.Setup(x => x.RetrieveMultiple(It.IsAny<QueryExpression>()))
@@ -279,7 +278,7 @@ namespace CCH.HPSO.Azure.Shared.Tests
             // Assert
             Assert.NotNull(result);
             Assert.Single(result.Entities);
-            Assert.Equal("Placeholder", result.Entities[0]["cch_placeholdername"]);
+            Assert.Equal("Placeholder", result.Entities[0]["ms_placeholdername"]);
         }
 
         [Fact]
@@ -424,20 +423,20 @@ namespace CCH.HPSO.Azure.Shared.Tests
 
             // Assert
             Assert.NotNull(capturedEntity);
-            Assert.Equal("cch_openaitextoutput", capturedEntity.LogicalName);
-            Assert.Equal($"{inputMessage.ContactName} - {inputMessage.PromptTemplateName}", capturedEntity["cch_openaitextoutputname"]);
-            Assert.Equal(new Guid(inputMessage.ContactId), ((EntityReference)capturedEntity["cch_contactid"]).Id);
-            Assert.Equal(new Guid(inputMessage.PromptTemplateId), ((EntityReference)capturedEntity["cch_templateid"]).Id);
-            Assert.Equal(apiResponse.SubjectLine, capturedEntity["cch_subjectline"]);
-            Assert.Equal(apiResponse.Headline, capturedEntity["cch_headline"]);
-            Assert.Equal(apiResponse.IntroText, capturedEntity["cch_introtext"]);
-            Assert.Equal(apiResponse.CTAText, capturedEntity["cch_ctatext"]);
-            Assert.Equal(apiResponse.OutroText, capturedEntity["cch_outrotext"]);
-            Assert.Equal(complianceScore, capturedEntity["cch_compliancescore"]);
-            Assert.Equal(JsonConvert.SerializeObject(apiResponse), capturedEntity["cch_openairesponse"]);
+            Assert.Equal("ms_openaitextoutput", capturedEntity.LogicalName);
+            Assert.Equal($"{inputMessage.ContactName} - {inputMessage.PromptTemplateName}", capturedEntity["ms_openaitextoutputname"]);
+            Assert.Equal(new Guid(inputMessage.ContactId), ((EntityReference)capturedEntity["ms_contactid"]).Id);
+            Assert.Equal(new Guid(inputMessage.PromptTemplateId), ((EntityReference)capturedEntity["ms_templateid"]).Id);
+            Assert.Equal(apiResponse.SubjectLine, capturedEntity["ms_subjectline"]);
+            Assert.Equal(apiResponse.Headline, capturedEntity["ms_headline"]);
+            Assert.Equal(apiResponse.IntroText, capturedEntity["ms_introtext"]);
+            Assert.Equal(apiResponse.CTAText, capturedEntity["ms_ctatext"]);
+            Assert.Equal(apiResponse.OutroText, capturedEntity["ms_outrotext"]);
+            Assert.Equal(complianceScore, capturedEntity["ms_compliancescore"]);
+            Assert.Equal(JsonConvert.SerializeObject(apiResponse), capturedEntity["ms_openairesponse"]);
             Assert.Equal(399080001, ((OptionSetValue)capturedEntity["statuscode"]).Value);
-            Assert.Equal(failureReason, capturedEntity["cch_failurereason"]);
-            Assert.Equal(FailureStageEnum.EvaluationAndPublish.ToString(), capturedEntity["cch_failurestage"]);
+            Assert.Equal(failureReason, capturedEntity["ms_failurereason"]);
+            Assert.Equal(FailureStageEnum.EvaluationAndPublish.ToString(), capturedEntity["ms_failurestage"]);
         }
 
         [Fact]
@@ -475,17 +474,17 @@ namespace CCH.HPSO.Azure.Shared.Tests
 
             // Assert
             Assert.NotNull(capturedEntity);
-            Assert.Equal("cch_openaitextoutput", capturedEntity.LogicalName);
-            Assert.Equal($"{inputMessage.ContactName} - {inputMessage.PromptTemplateName}", capturedEntity["cch_openaitextoutputname"]);
-            Assert.Equal(new Guid(inputMessage.ContactId), ((EntityReference)capturedEntity["cch_contactid"]).Id);
-            Assert.Equal(new Guid(inputMessage.PromptTemplateId), ((EntityReference)capturedEntity["cch_templateid"]).Id);
-            Assert.Equal(apiResponse.SubjectLine, capturedEntity["cch_subjectline"]);
-            Assert.Equal(apiResponse.Headline, capturedEntity["cch_headline"]);
-            Assert.Equal(apiResponse.IntroText, capturedEntity["cch_introtext"]);
-            Assert.Equal(apiResponse.CTAText, capturedEntity["cch_ctatext"]);
-            Assert.Equal(apiResponse.OutroText, capturedEntity["cch_outrotext"]);
-            Assert.Equal(complianceScore, capturedEntity["cch_compliancescore"]);
-            Assert.Equal(JsonConvert.SerializeObject(apiResponse), capturedEntity["cch_openairesponse"]);
+            Assert.Equal("ms_openaitextoutput", capturedEntity.LogicalName);
+            Assert.Equal($"{inputMessage.ContactName} - {inputMessage.PromptTemplateName}", capturedEntity["ms_openaitextoutputname"]);
+            Assert.Equal(new Guid(inputMessage.ContactId), ((EntityReference)capturedEntity["ms_contactid"]).Id);
+            Assert.Equal(new Guid(inputMessage.PromptTemplateId), ((EntityReference)capturedEntity["ms_templateid"]).Id);
+            Assert.Equal(apiResponse.SubjectLine, capturedEntity["ms_subjectline"]);
+            Assert.Equal(apiResponse.Headline, capturedEntity["ms_headline"]);
+            Assert.Equal(apiResponse.IntroText, capturedEntity["ms_introtext"]);
+            Assert.Equal(apiResponse.CTAText, capturedEntity["ms_ctatext"]);
+            Assert.Equal(apiResponse.OutroText, capturedEntity["ms_outrotext"]);
+            Assert.Equal(complianceScore, capturedEntity["ms_compliancescore"]);
+            Assert.Equal(JsonConvert.SerializeObject(apiResponse), capturedEntity["ms_openairesponse"]);
             Assert.Equal(1, ((OptionSetValue)capturedEntity["statuscode"]).Value);
         }
     }
