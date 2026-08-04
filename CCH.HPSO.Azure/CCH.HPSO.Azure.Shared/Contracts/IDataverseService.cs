@@ -46,6 +46,14 @@ namespace CCH.HPSO.Azure.Shared.Contracts
         EntityCollection GetPromptTemplateMappings(string promptTemplateId, string contactId, string contactName, string promptTemplateName, IOrganizationService orgService, FailureStageEnum failureStageEnum);
 
         /// <summary>
+        /// This method retrieves the configurable OpenAI system message configured on the prompt template record.
+        /// </summary>
+        /// <param name="promptTemplateId">The prompt template id whose system message should be retrieved.</param>
+        /// <param name="orgService">The organization service instance used to interact with Dataverse.</param>
+        /// <returns>The configured system message, or an empty string when none is configured.</returns>
+        string GetSystemMessage(string promptTemplateId, IOrganizationService orgService);
+
+        /// <summary>
         /// Creates a record in the OpenAI Text Output table using the provided connection string and API response.
         /// </summary>
         /// <param name="failureReason">The failure reason.</param>

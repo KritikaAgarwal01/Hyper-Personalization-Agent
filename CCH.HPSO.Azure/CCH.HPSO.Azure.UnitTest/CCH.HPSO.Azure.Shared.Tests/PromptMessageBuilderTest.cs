@@ -13,7 +13,12 @@ namespace CCH.HPSO.Azure.Shared.Tests
 {
     public class PromptMessageBuilderTest
     {
+        /* ================================================================================================
+         * The delegate below supported tests for the previous placeholder resolution helpers, which are
+         * no longer used now that resolution is delegated to the ms_ResolveTraversalPath custom API.
+         * ================================================================================================
         private delegate void RetrieveTop1SegmentOrdersPlaceholdersCallback(string a, string b, string c, List<string> d, FailureStageEnum e, ref string f);
+        */
 
         [Fact]
         public void BuildUpdatedMessage_ReturnsEmptyString_WhenServiceClientIsNotReady()
@@ -45,6 +50,13 @@ namespace CCH.HPSO.Azure.Shared.Tests
             // Assert
             Assert.Equal(string.Empty, result);
         }
+
+        /* ================================================================================================
+         * The tests below exercised the previous placeholder resolution helpers (MapPlaceholdersToAttributes,
+         * PopulatePlaceholderValues, PopulatePlaceholderValueFromEntity, GetActualValueString), which are no
+         * longer used now that resolution is delegated to the ms_ResolveTraversalPath custom API.
+         * They are retained (commented out) for reference.
+         * ================================================================================================
 
         [Fact]
         public void MapPlaceholdersToAttributes_MapsCorrectly()
@@ -236,6 +248,8 @@ namespace CCH.HPSO.Azure.Shared.Tests
             var dateResult = builder.GetActualValueString("templateId", "contactId", "Contact", "Template", dataverseServiceMock.Object, DateTime.UtcNow, "entity", "attr", Mock.Of<IOrganizationService>(), FailureStageEnum.None);
             Assert.Contains("T", dateResult);
         }
+        * ================================================================================================
+        */
 
         [Fact]
         public void ParseMessage_ParsesValidJson()
@@ -277,6 +291,11 @@ namespace CCH.HPSO.Azure.Shared.Tests
             var builder = new PromptMessageBuilder();
             Assert.ThrowsAny<System.Text.Json.JsonException>(() => builder.ParseMessage("{not valid json}", "Method"));
         }
+
+        /* ================================================================================================
+         * The GetActualValueString tests below are retained (commented out) for reference; the method is no
+         * longer used now that resolution is delegated to the ms_ResolveTraversalPath custom API.
+         * ================================================================================================
 
         [Fact]
         public void GetActualValueString_ReturnsFormattedCurrency_ForMoney()
@@ -349,5 +368,7 @@ namespace CCH.HPSO.Azure.Shared.Tests
             // Assert
             Assert.Equal("", result);
         }
+        * ================================================================================================
+        */
     }
 }

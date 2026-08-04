@@ -50,21 +50,27 @@ namespace CCH.HPSO.Azure.Shared.Services
                 // Add the API key to the request headers
                 httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
 
+                // Resolve the system message from the configurable value fetched from Dataverse (prompt template),
+                // substituting the {PromptLanguage} and {Tone} tokens. Falls back to the built-in default when the
+                // prompt template does not have a system message configured.
+                string systemMessage = BuildSystemMessage(inputMessage);
+
                 // Build the request body with the message list and temperature setting
                 var requestBody = new
                 {
                     messages = new[]
                     {
-                         new { role = "system", content = $"You are a B2B marketing expert fluent in English and {inputMessage.PromptLanguage}, working with retail outlets and stores. Your job is to write hyper-personalized marketing emails for business decision-makers using the store’s name, type, location, and a product recommendation. Use a {inputMessage.Tone} tone in your response. Write the email in {inputMessage.PromptLanguage} and use the local tone of {inputMessage.PromptLanguage} suitable for B2B communication for enterprise buyers. Use natural-sounding, industry-appropriate {inputMessage.PromptLanguage} phrasing, and culturally adopted expressions in {inputMessage.PromptLanguage} — not overly literal translations from English. Follow standard {inputMessage.PromptLanguage} email etiquette (professional, polite, not overly casual). Include a localized call-to-action (CTA) that fits the local tone of {inputMessage.PromptLanguage}."},
+                         new { role = "system", content = systemMessage },
                          new { role = "user", content = inputMessage.PromptText }
-                    },
-                    temperature = 0
+                    }
+                    //,temperature = 0
                 };
 
                 // Serialize the request body to JSON and set content type to application/json
                 var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
-                var openAIEndpoint = $"{endpoint}/openai/deployments/{inputMessage.PromptDeploymentName}/chat/completions?api-version={inputMessage.PromptAppVersion}";
+                //var openAIEndpoint = $"{endpoint}/openai/deployments/{inputMessage.PromptDeploymentName}/chat/completions?api-version={inputMessage.PromptAppVersion}";
+                var openAIEndpoint = Environment.GetEnvironmentVariable("AzureOpenAI");
 
                 _logger.LogInformation("Sending request to OpenAI endpoint: {Endpoint}", openAIEndpoint);
 
@@ -113,5 +119,29 @@ namespace CCH.HPSO.Azure.Shared.Services
                 throw;
             }
         }
+
+        /// <summary>
+        /// Builds the system message sent to Azure OpenAI. Uses the configurable system message carried on the
+        /// input message (fetched from the prompt template in Dataverse) when present, otherwise falls back to the
+        /// built-in default. The {PromptLanguage} and {Tone} tokens are substituted with the input message values.
+        /// </summary>
+        /// <param name="inputMessage">The input message containing the configurable system message and token values.</param>
+        /// <returns>The resolved system message with tokens substituted.</returns>
+        private static string BuildSystemMessage(InputMessage inputMessage)
+        {
+            string template = string.IsNullOrWhiteSpace(inputMessage.SystemMessage)
+                ? DefaultSystemMessageTemplate
+                : inputMessage.SystemMessage;
+
+            return template
+                .Replace("{PromptLanguage}", inputMessage.PromptLanguage ?? string.Empty)
+                .Replace("{Tone}", inputMessage.Tone ?? string.Empty);
+        }
+
+        /// <summary>
+        /// The built-in fallback system message template used when the prompt template in Dataverse does not
+        /// have a system message configured. Contains the {PromptLanguage} and {Tone} tokens.
+        /// </summary>
+        private const string DefaultSystemMessageTemplate = "You are a B2B marketing expert fluent in English and {PromptLanguage}, working with retail outlets and stores. Your job is to write hyper-personalized marketing emails for business decision-makers using the store’s name, type, location, and a product recommendation. Use a {Tone} tone in your response. Write the email in {PromptLanguage} and use the local tone of {PromptLanguage} suitable for B2B communication for enterprise buyers. Use natural-sounding, industry-appropriate {PromptLanguage} phrasing, and culturally adopted expressions in {PromptLanguage} — not overly literal translations from English. Follow standard {PromptLanguage} email etiquette (professional, polite, not overly casual). Include a localized call-to-action (CTA) that fits the local tone of {PromptLanguage}.";
     }
 }

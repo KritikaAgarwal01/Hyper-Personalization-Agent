@@ -33,12 +33,21 @@ namespace CCH.HPSO.Azure.Shared.Services
         /// <summary>
         /// The constant representing the placeholder for the contact's id.
         /// </summary>
-        private const string ContactId = "cch_contactid";
+        private const string ContactId = "ms_contactid";
 
         /// <summary>
         /// The constant representing the logical name of the contact entity.
         /// </summary>
         private const string Contact = "contact";
+
+        /// <summary>
+        /// Status/state option values defined on ms_openaitextoutput. The environment only defines the
+        /// out-of-the-box Active (state 0 / status 1) and Inactive (state 1 / status 2) options, so
+        /// failure/error records are marked Inactive and successful records remain Active.
+        /// </summary>
+        private const int StateCodeInactive = 1;
+        private const int StatusCodeActive = 1;
+        private const int StatusCodeInactive = 2;
 
         /// <summary>
         /// The constructor for the DataverseService class.
@@ -61,26 +70,26 @@ namespace CCH.HPSO.Azure.Shared.Services
         public EntityCollection RetrieveAccountPlaceholder(string promptTemplateId, string contactId, string contactName, string promptTemplateName, List<string> accountAttributes, FailureStageEnum failureStageEnum)
         {
             // Set Condition Values
-            var query_cch_contactrole = 311220009;
+            var query_ms_contactrole = 311220009;
 
-            var query = new QueryExpression("cch_contactrole")
+            var query = new QueryExpression("ms_contactrole")
             {
                 ColumnSet = new ColumnSet(
                     ContactId,
-                    "cch_accountid"
+                    "ms_accountid"
                 ),
                 Criteria = new FilterExpression(LogicalOperator.And)
                 {
                     Conditions =
                     {
                         new ConditionExpression(ContactId, ConditionOperator.Equal, contactId),
-                        new ConditionExpression("cch_contactrole", ConditionOperator.Equal, query_cch_contactrole)
+                        new ConditionExpression("ms_contactrole", ConditionOperator.Equal, query_ms_contactrole)
                     }
                 }
             };
 
             EntityCollection objContactRoles = _orgService.RetrieveMultiple(query);
-            var accountId = objContactRoles != null && objContactRoles.Entities != null && objContactRoles.Entities.Count > 0 ? objContactRoles.Entities[0].GetAttributeValue<EntityReference>("cch_accountid")?.Id : Guid.Empty;
+            var accountId = objContactRoles != null && objContactRoles.Entities != null && objContactRoles.Entities.Count > 0 ? objContactRoles.Entities[0].GetAttributeValue<EntityReference>("ms_accountid")?.Id : Guid.Empty;
 
             EntityCollection accountCollection = new EntityCollection();
             if (accountId != Guid.Empty)
@@ -197,9 +206,9 @@ namespace CCH.HPSO.Azure.Shared.Services
         public EntityCollection GetPromptTemplateMappings(string promptTemplateId, string contactId, string contactName, string promptTemplateName, IOrganizationService orgService, FailureStageEnum failureStageEnum)
         {
             var query_statecode = 0;
-            var promptTemplatesAttributeMappingQuery = new QueryExpression("cch_prompttemplateattributemapping")
+            var promptTemplatesAttributeMappingQuery = new QueryExpression("ms_prompttemplateattributemapping")
             {
-                ColumnSet = new ColumnSet("cch_attributedatatype", "cch_description", "cch_placeholdername", "cch_traversalpath"),
+                ColumnSet = new ColumnSet("ms_attributedatatype", "ms_description", "ms_placeholdername", "ms_traversalpath"),
                 Criteria = new FilterExpression(LogicalOperator.And)
                 {
                     Conditions =
@@ -222,6 +231,24 @@ namespace CCH.HPSO.Azure.Shared.Services
         }
 
         /// <summary>
+        /// This method retrieves the configurable OpenAI system message configured on the prompt template record.
+        /// </summary>
+        /// <param name="promptTemplateId">The prompt template id whose system message should be retrieved.</param>
+        /// <param name="orgService">The organization service instance used to interact with Dataverse.</param>
+        /// <returns>The configured system message, or an empty string when none is configured.</returns>
+        public string GetSystemMessage(string promptTemplateId, IOrganizationService orgService)
+        {
+            if (string.IsNullOrWhiteSpace(promptTemplateId) || !Guid.TryParse(promptTemplateId, out Guid templateGuid))
+            {
+                return string.Empty;
+            }
+
+            var promptTemplate = orgService.Retrieve("ms_prompttemplate", templateGuid, new ColumnSet("ms_systemmessage"));
+
+            return promptTemplate?.GetAttributeValue<string>("ms_systemmessage") ?? string.Empty;
+        }
+
+        /// <summary>
         /// Creates a record in the OpenAI Text Output table using the provided connection string and API response for error scenario.
         /// </summary>
         /// <param name="failureReason">The failure reason.</param>
@@ -239,13 +266,14 @@ namespace CCH.HPSO.Azure.Shared.Services
                 IOrganizationService service = _serviceClientFactory.Create(connectionString);
                 if (service != null)
                 {
-                    Entity openAITextOutput = new Entity("cch_openaitextoutput");
-                    openAITextOutput["cch_openaitextoutputname"] = $"{contactName} - {promptTemplateName}";
+                    Entity openAITextOutput = new Entity("ms_openaitextoutput");
+                    openAITextOutput["ms_openaitextoutputname"] = $"{contactName} - {promptTemplateName}";
                     openAITextOutput[ContactId] = new EntityReference(Contact, new Guid(contactId));
-                    openAITextOutput["cch_templateid"] = new EntityReference("cch_prompttemplate", new Guid(promptTemplateId));
-                    openAITextOutput["cch_failurereason"] = failureReason;
-                    openAITextOutput["cch_failurestage"] = failureStage.ToString();
-                    openAITextOutput["statuscode"] = new OptionSetValue(399080001);
+                    openAITextOutput["ms_templateid"] = new EntityReference("ms_prompttemplate", new Guid(promptTemplateId));
+                    openAITextOutput["ms_failurereason"] = failureReason;
+                    openAITextOutput["ms_failurestage"] = failureStage.ToString();
+                    openAITextOutput["statecode"] = new OptionSetValue(StateCodeInactive);
+                    openAITextOutput["statuscode"] = new OptionSetValue(StatusCodeInactive);
                     service.Create(openAITextOutput);
                 }
             }
@@ -264,28 +292,29 @@ namespace CCH.HPSO.Azure.Shared.Services
             var contactGuid = string.IsNullOrEmpty(inputMessage.ContactId) ? Guid.Empty : Guid.Parse(inputMessage.ContactId);
             var templateGuid = string.IsNullOrEmpty(inputMessage.PromptTemplateId) ? Guid.Empty : Guid.Parse(inputMessage.PromptTemplateId);
 
-            Entity openAITextOutput = new Entity("cch_openaitextoutput");
+            Entity openAITextOutput = new Entity("ms_openaitextoutput");
 
-            openAITextOutput["cch_openaitextoutputname"] = $"{inputMessage.ContactName} - {inputMessage.PromptTemplateName}";
+            openAITextOutput["ms_openaitextoutputname"] = $"{inputMessage.ContactName} - {inputMessage.PromptTemplateName}";
             openAITextOutput[ContactId] = new EntityReference(Contact, contactGuid);
-            openAITextOutput["cch_templateid"] = new EntityReference("cch_prompttemplate", templateGuid);
-            openAITextOutput["cch_subjectline"] = apiResponse.SubjectLine;
-            openAITextOutput["cch_headline"] = apiResponse.Headline;
-            openAITextOutput["cch_introtext"] = apiResponse.IntroText;
-            openAITextOutput["cch_ctatext"] = apiResponse.CTAText;
-            openAITextOutput["cch_outrotext"] = apiResponse.OutroText;
-            openAITextOutput["cch_compliancescore"] = complianceScore;
-            openAITextOutput["cch_openairesponse"] = JsonConvert.SerializeObject(apiResponse);
+            openAITextOutput["ms_templateid"] = new EntityReference("ms_prompttemplate", templateGuid);
+            openAITextOutput["ms_subjectline"] = apiResponse.SubjectLine;
+            openAITextOutput["ms_headline"] = apiResponse.Headline;
+            openAITextOutput["ms_introtext"] = apiResponse.IntroText;
+            openAITextOutput["ms_ctatext"] = apiResponse.CTAText;
+            openAITextOutput["ms_outrotext"] = apiResponse.OutroText;
+            openAITextOutput["ms_compliancescore"] = complianceScore;
+            openAITextOutput["ms_openairesponse"] = JsonConvert.SerializeObject(apiResponse);
 
             if (failureReason != null && failureReason != string.Empty)
             {
-                openAITextOutput["statuscode"] = new OptionSetValue(399080001);
-                openAITextOutput["cch_failurereason"] = failureReason;
-                openAITextOutput["cch_failurestage"] = FailureStageEnum.EvaluationAndPublish.ToString();
+                openAITextOutput["statecode"] = new OptionSetValue(StateCodeInactive);
+                openAITextOutput["statuscode"] = new OptionSetValue(StatusCodeInactive);
+                openAITextOutput["ms_failurereason"] = failureReason;
+                openAITextOutput["ms_failurestage"] = FailureStageEnum.EvaluationAndPublish.ToString();
             }
             else
             {
-                openAITextOutput["statuscode"] = new OptionSetValue(1);
+                openAITextOutput["statuscode"] = new OptionSetValue(StatusCodeActive);
             }
 
             service.Create(openAITextOutput);

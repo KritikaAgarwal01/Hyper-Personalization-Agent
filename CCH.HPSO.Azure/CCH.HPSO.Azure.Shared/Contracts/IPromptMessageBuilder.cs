@@ -20,6 +20,12 @@ namespace CCH.HPSO.Azure.Shared.Contracts
         /// <returns>The updated message with placeholders replaced</returns>
         string BuildUpdatedMessage(InputMessage inputMessage, string connectionString, IServiceClientFactory serviceClientFactory, FailureStageEnum failureStageEnum = FailureStageEnum.None);
 
+        /* ================================================================================================
+         * The following members backed the previous placeholder resolution approach and are no longer used
+         * now that resolution is delegated to the ms_ResolveTraversalPath Dataverse custom API. They are
+         * retained (commented out) for reference.
+         * ================================================================================================
+
         /// <summary>
         /// This method retrieves the placeholders from the prompt template mappings.
         /// </summary>
@@ -68,6 +74,8 @@ namespace CCH.HPSO.Azure.Shared.Contracts
         /// <param name="orgService">The organization service instance used to retrieve data.</param>
         /// <returns>The actual value as a string.</returns>
         string GetActualValueString(string promptTemplateId, string contactId, string contactName, string promptTemplateName, IDataverseService dataverseService, object actualValue, string entityLogicalName, string attributeLogicalName, IOrganizationService orgService, FailureStageEnum failureStageEnum);
+        * ================================================================================================
+        */
 
         /// <summary>
         /// This method parses the incoming message from the Service Bus topic to extract the contact ID, prompt text in JSON format, and compliance threshold.

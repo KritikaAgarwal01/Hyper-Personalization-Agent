@@ -62,5 +62,11 @@ namespace CCH.HPSO.Azure.Shared.DataModel
         /// Gets or sets a property
         /// </summary>
         public string? PromptAppVersion { get; set; }
+
+        /// <summary>
+        /// Gets or sets the configurable OpenAI system message fetched from the prompt template in Dataverse.
+        /// May contain the {PromptLanguage} and {Tone} tokens, which are substituted before the call to Azure OpenAI.
+        /// </summary>
+        public string? SystemMessage { get; set; }
     }
 }

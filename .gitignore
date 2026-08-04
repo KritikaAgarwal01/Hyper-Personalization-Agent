@@ -1,0 +1,31 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Azure Functions local settings (contains secrets)
+local.settings.json
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.pdb
+
+# Rider / VS Code
+.idea/

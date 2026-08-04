@@ -163,9 +163,11 @@ public class PromptGenerationFunction(ILogger<PromptGenerationFunction> logger, 
         {
             var promptInput = BuildPromptInput(inputMessage, nameof(ProcessPreviewAsync));
             string generatedText = await _openAIService.CallAzureOpenAIAsync(promptInput);
-            var evaluationResult = await EvaluateGeneratedTextAsync(inputMessage, generatedText);
 
-            return new PreviewResult(generatedText, evaluationResult.ComplianceScore, evaluationResult.FailureReason);
+            // Evaluation layer disabled for this use case - the generated text is no longer evaluated via the evaluation API.
+            // var evaluationResult = await EvaluateGeneratedTextAsync(inputMessage, generatedText);
+            // return new PreviewResult(generatedText, evaluationResult.ComplianceScore, evaluationResult.FailureReason);
+            return new PreviewResult(generatedText, 0, string.Empty);
         }
         catch (Exception ex)
         {
@@ -184,8 +186,10 @@ public class PromptGenerationFunction(ILogger<PromptGenerationFunction> logger, 
         string generatedText = await GenerateEmailTextAsync(promptInput);
         promptInput.PromptText = generatedText;
 
-        var evaluationResult = await EvaluateGeneratedTextAsync(promptInput, generatedText, FailureStageEnum.EvaluationAndPublish);
-        CreateOpenAiTextOutputRecord(promptInput, evaluationResult.ComplianceScore, evaluationResult.FailureReason);
+        // Evaluation layer disabled for this use case - the generated text is no longer evaluated via the evaluation API.
+        // var evaluationResult = await EvaluateGeneratedTextAsync(promptInput, generatedText, FailureStageEnum.EvaluationAndPublish);
+        // CreateOpenAiTextOutputRecord(promptInput, evaluationResult.ComplianceScore, evaluationResult.FailureReason);
+        CreateOpenAiTextOutputRecord(promptInput, 0, string.Empty);
     }
 
     /// <summary>
@@ -237,6 +241,8 @@ public class PromptGenerationFunction(ILogger<PromptGenerationFunction> logger, 
         }
     }
 
+    // Evaluation layer disabled for this use case - the following method is retained (commented out) for reference.
+    /*
     /// <summary>
     /// Evaluates generated text and extracts compliance details.
     /// </summary>
@@ -274,6 +280,7 @@ public class PromptGenerationFunction(ILogger<PromptGenerationFunction> logger, 
             throw new PipelineStageException(failureStage.Value, "Error evaluating generated text.", ex);
         }
     }
+    */
 
     /// <summary>
     /// Persists the generated output and evaluation result to Dataverse.
